@@ -17,9 +17,9 @@ const theme = createTheme({
     },
     primary: {
       main: '#91B7C2',
+      light: '#ECF7FA',
     },
     secondary: { main: '#FEAF66' },
-    pLight: '#ECF7FA',
     surface: '#545F6E',
     gray: '#A6AEBA',
     bg: '#F5F5F9',

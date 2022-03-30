@@ -1,23 +1,29 @@
-import * as React from 'react';
-import { styled } from '@mui/material/styles';
+import React, { useEffect, useState } from 'react';
 import MuiDrawer from '@mui/material/Drawer';
-import List from '@mui/material/List';
-import IconButton from '@mui/material/IconButton';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
-import MailIcon from '@mui/icons-material/Mail';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import { styled } from '@mui/material/styles';
+import {
+  Box,
+  Collapse,
+  List,
+  IconButton,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+} from '@mui/material';
 
 import logo from '../../assets/images/logo.png';
-import { Box } from '@mui/material';
+import { drawerMenu } from '../../constants/drawerMenu';
 
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
+  background: theme.palette.common.black,
+  color: theme.palette.primary.light,
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.enteringScreen,
@@ -26,6 +32,8 @@ const openedMixin = (theme) => ({
 });
 
 const closedMixin = (theme) => ({
+  background: theme.palette.common.black,
+  color: theme.palette.primary.light,
   transition: theme.transitions.create('width', {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
@@ -35,15 +43,27 @@ const closedMixin = (theme) => ({
   [theme.breakpoints.up('sm')]: {
     width: `calc(${theme.spacing(8)} + 1px)`,
   },
+  '& .MuiListItemIcon-root': {
+    color: 'inherit',
+  },
+  '& .MuiDivider-root': {
+    backgroundColor: 'currentColor',
+    opacity: 0.3,
+  },
 });
 
 const DrawerHeader = styled('div')(({ theme }) => ({
+  width: '100%',
+  color: theme.palette.primary.light,
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'flex-end',
+  justifyContent: 'space-between',
   padding: theme.spacing(0, 1),
   // necessary for content to be below app bar
   ...theme.mixins.toolbar,
+  '& .MuiButtonBase-root': {
+    color: 'inherit',
+  },
 }));
 
 const Drawer = styled(MuiDrawer, {
@@ -61,13 +81,38 @@ const Drawer = styled(MuiDrawer, {
     ...closedMixin(theme),
     '& .MuiDrawer-paper': closedMixin(theme),
   }),
+  '& .MuiListItemIcon-root': {
+    color: 'inherit',
+  },
+  '& .MuiDivider-root': {
+    backgroundColor: 'currentColor',
+    opacity: 0.3,
+  },
 }));
 
-function SideDrawer({ theme, open, handleDrawerClose }) {
+function SideDrawer({ theme, active, handleDrawerClose }) {
+  const [drawerList, setDrawerList] = useState([]);
+  const [role, setRole] = useState('ADMIN');
+
+  useEffect(() => {
+    setDrawerList(
+      drawerMenu.filter((drawer) => drawer.visibility.some((x) => x === role))
+    );
+  }, [role]);
+
+  const handleClick = (id) => {
+    if (!active) return;
+
+    const index = drawerList.findIndex((x) => x.id === id);
+    setDrawerList((prevValue) => [
+      ...prevValue,
+      (prevValue[index].isActive = !prevValue[index].isActive),
+    ]);
+  };
   return (
-    <Drawer variant='permanent' open={open}>
+    <Drawer variant='permanent' open={active}>
       <DrawerHeader>
-        {open && (
+        {active && (
           <Box sx={{ height: '2rem', '& img': { height: '100%' } }}>
             <img src={logo} alt='invision' />
           </Box>
@@ -81,49 +126,51 @@ function SideDrawer({ theme, open, handleDrawerClose }) {
         </IconButton>
       </DrawerHeader>
       <List>
-        {['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-          <ListItemButton
-            key={text}
-            sx={{
-              minHeight: 48,
-              justifyContent: open ? 'initial' : 'center',
-              px: 2.5,
-            }}
-          >
-            <ListItemIcon
-              sx={{
-                minWidth: 0,
-                mr: open ? 3 : 'auto',
-                justifyContent: 'center',
-              }}
-            >
-              {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-            </ListItemIcon>
-            <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
-          </ListItemButton>
-        ))}
+        <ListItemButton onClick={() => setRole('ADMIN')}>
+          <ListItemText primary='admin' />
+        </ListItemButton>
+        <ListItemButton onClick={() => setRole('SUPERVISOR')}>
+          <ListItemText primary='supervisor' />
+        </ListItemButton>
+        <ListItemButton onClick={() => setRole('REPORTER')}>
+          <ListItemText primary='reporter' />
+        </ListItemButton>
+        <ListItemButton onClick={() => setRole('USER')}>
+          <ListItemText primary='user' />
+        </ListItemButton>
       </List>
       <List>
-        {['All mail', 'Trash', 'Spam'].map((text, index) => (
-          <ListItemButton
-            key={text}
-            sx={{
-              minHeight: 48,
-              justifyContent: open ? 'initial' : 'center',
-              px: 2.5,
-            }}
-          >
-            <ListItemIcon
-              sx={{
-                minWidth: 0,
-                mr: open ? 3 : 'auto',
-                justifyContent: 'center',
-              }}
+        {drawerList.map((drawer, index) => (
+          <React.Fragment key={index}>
+            <ListItemButton onClick={() => handleClick(drawer.id)}>
+              <ListItemIcon>{drawer.icon}</ListItemIcon>
+              <ListItemText
+                primary={drawer.title}
+                primaryTypographyProps={{ style: { whiteSpace: 'normal' } }}
+              />
+              {drawer.listItems &&
+                (drawer.isActive ? <ExpandLess /> : <ExpandMore />)}
+              {/* {drawer.isActive ? <ExpandLess /> : <ExpandMore />} */}
+            </ListItemButton>
+            <Collapse
+              in={drawer.isActive && active}
+              timeout='auto'
+              unmountOnExit
             >
-              {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-            </ListItemIcon>
-            <ListItemText primary={text} sx={{ opacity: open ? 1 : 0 }} />
-          </ListItemButton>
+              {drawer?.listItems?.map((list, index) => (
+                <List component='div' disablePadding key={index}>
+                  <ListItemButton sx={{ pl: 8 }}>
+                    <ListItemText
+                      primary={list.title}
+                      primaryTypographyProps={{
+                        style: { whiteSpace: 'normal' },
+                      }}
+                    />
+                  </ListItemButton>
+                </List>
+              ))}
+            </Collapse>
+          </React.Fragment>
         ))}
       </List>
     </Drawer>

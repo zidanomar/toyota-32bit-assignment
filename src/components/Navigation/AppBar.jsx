@@ -1,19 +1,19 @@
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import MuiAppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
-import { Box, Menu, MenuItem } from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
+import { Box, Menu, MenuItem, Toolbar, IconButton } from '@mui/material';
 
 import logo from '../../assets/images/logo.png';
-import PersonIcon from '@mui/icons-material/Person';
 
 const drawerWidth = 240;
 
 const Header = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== 'open',
 })(({ theme, open }) => ({
+  backgroundColor: theme.palette.common.black,
+  color: theme.palette.primary.light,
   zIndex: theme.zIndex.drawer + 1,
   transition: theme.transitions.create(['width', 'margin'], {
     easing: theme.transitions.easing.sharp,
@@ -29,8 +29,9 @@ const Header = styled(MuiAppBar, {
   }),
 }));
 
-export default function AppBar({ open, handleDrawerOpen }) {
-  const [auth, setAuth] = React.useState(true);
+export default function AppBar({ active, handleDrawerOpen }) {
+  // eslint-disable-next-line
+  const [auth, setAuth] = React.useState(true); // change this line to global state later
   const [anchorEl, setAnchorEl] = React.useState(null);
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -39,29 +40,36 @@ export default function AppBar({ open, handleDrawerOpen }) {
     setAnchorEl(null);
   };
   return (
-    <Header position='fixed' open={open} elevation={0} sx={{ display: 'flex' }}>
+    <Header
+      position='fixed'
+      open={active}
+      elevation={0}
+      sx={{ display: 'flex' }}
+    >
       <Toolbar>
-        <IconButton
-          color='inherit'
-          aria-label='open drawer'
-          onClick={handleDrawerOpen}
-          edge='start'
-          sx={{
-            marginRight: 5,
-            ...(open && { display: 'none' }),
-          }}
-        >
-          <MenuIcon />
-        </IconButton>
+        {auth && (
+          <IconButton
+            color='inherit'
+            aria-label='open drawer'
+            onClick={handleDrawerOpen}
+            edge='start'
+            sx={{
+              marginRight: 5,
+              ...(active && { display: 'none' }),
+            }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
         <Box
           sx={{
             width: '100%',
             display: 'flex',
-            justifyContent: open ? 'flex-end' : 'space-between',
+            justifyContent: active ? 'flex-end' : 'space-between',
             alignItems: 'center',
           }}
         >
-          {!open && (
+          {!active && (
             <Box sx={{ height: '2rem', '& img': { height: '100%' } }}>
               <img src={logo} alt='invision' />
             </Box>
